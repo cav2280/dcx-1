@@ -1,0 +1,58 @@
+import pandas as pd
+import numpy as np
+import matplotlib as plt
+import seaborn as sns
+
+
+data = pd.read_excel('(2006_2022)순위_서울시 466개 법정동 주택침수건수 (1).xlsx')
+data.head()
+
+#필요없는 칼럼 지우기
+data = data.drop(['순위', 'Unnamed: 4', 'Unnamed: 5'], axis=1)
+data['시군구'].unique()
+
+
+def house_price(locate):
+    df=pd.read_csv('주택가격지수(매매)_20230710170948.csv',header=0)
+    tmp=df.loc[df['시점'] == 2022].loc[df['자치구별(2)']==locate,'종합'].values
+    tmp_1=df.loc[df['시점'] == 2006].loc[df['자치구별(2)']==locate,'종합'].values
+    growth = (int(tmp) - int(tmp_1)) / int(tmp_1) * 100
+    return float(growth)
+
+
+
+def flooding(locate):
+    data = pd.read_excel('(2006_2022)순위_서울시 466개 법정동 주택침수건수 (1).xlsx')
+    data = data.drop(['순위', 'Unnamed: 4', 'Unnamed: 5'], axis=1)
+    locate1 = locate
+    data=data[data['시군구']==locate1]
+    sum_data=data['침수주택 건수(건)'].sum()
+    return sum_data
+                   
+print(house_price(locate))                   
+print(flooding(locate))
+
+gu=['관악구', '영등포구', '동작구', '양천구', '강서구', '서초구', '구로구', '금천구', '강남구',
+       '강동구', '광진구', '은평구', '송파구', '강북구', '서대문구', '마포구', '중랑구', '도봉구',
+       '성북구', '동대문구', '노원구', '성동구', '용산구', '중구', '종로구']
+
+data1=[]
+for i in gu:
+    data1.append([house_price(i), flooding(i)])
+   
+
+columns = ['집값 상승률', '누적 침수 신고']
+index = gu
+df=pd.DataFrame(data1, index = index, columns= columns)
+
+sns.lmplot(x='누적 침수 신고', y='집값 상승률', data=df, ci=None)
+plt.rcParams['font.family'] = 'MalgunGothic'
+
+from sklearn.linear_model import LinearRegression
+from scipy import stats
+
+corr, p_value = stats.pearsonr(df['누적 침수 신고'], df['집값 상승률'])
+print(f"상관 계수: {corr}") 
+print(f"p-value: {p_value}")
+
+
